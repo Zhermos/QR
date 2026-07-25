@@ -394,7 +394,6 @@ function updateStats(dataText) {
     dataSize.textContent = `ขนาดข้อมูล: ${sizeText}`;
 }
 
-// Primary function to draw QR code on Canvas with color customization and branding
 function drawQRCode(qrDataText) {
     const size = parseInt(qrSizeSelect.value) || 512;
     const margin = parseInt(qrMarginSelect.value) || 4;
@@ -413,12 +412,13 @@ function drawQRCode(qrDataText) {
         margin: margin,
         width: size,
         color: {
-            dark: '#000000FF', // Force solid black for layout extraction
-            light: '#00000000' // Transparent background
+            dark: '#000000FF', // Solid black modules
+            light: '#00000000' // Transparent background (so we can color modules with source-in)
         }
     };
     
-    QRCode.toCanvas(tempCanvas, qrDataText, qrOptions, function(err) {
+    // Draw QR code directly on mainCanvas
+    QRCode.toCanvas(mainCanvas, qrDataText, qrOptions, function(err) {
         if (err) {
             console.error(err);
             showToast("ความจุข้อมูลเกินพิกัดสำหรับระดับความปลอดภัยนี้! ลองลดข้อมูลลง หรือปรับระดับความปลอดภัยเป็น L");
@@ -426,21 +426,9 @@ function drawQRCode(qrDataText) {
         }
         
         const ctx = mainCanvas.getContext('2d');
-        mainCanvas.width = size;
-        mainCanvas.height = size;
         
-        // 1. Fill Background
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, size, size);
-        
-        // 2. Setup offscreen canvas to mask modules
-        const fgCanvas = document.createElement('canvas');
-        fgCanvas.width = size;
-        fgCanvas.height = size;
-        const fgCtx = fgCanvas.getContext('2d');
-        
-        fgCtx.drawImage(tempCanvas, 0, 0);
-        fgCtx.globalCompositeOperation = 'source-in';
+        // 1. Color the black modules with solid color or gradient
+        ctx.globalCompositeOperation = 'source-in';
         
         if (isGradient) {
             const gradStart = qrGradStartInput.value;
@@ -449,28 +437,33 @@ function drawQRCode(qrDataText) {
             
             let gradient;
             if (gradDir === 'vertical') {
-                gradient = fgCtx.createLinearGradient(0, 0, 0, size);
+                gradient = ctx.createLinearGradient(0, 0, 0, size);
             } else if (gradDir === 'horizontal') {
-                gradient = fgCtx.createLinearGradient(0, 0, size, 0);
+                gradient = ctx.createLinearGradient(0, 0, size, 0);
             } else if (gradDir === 'diagonal') {
-                gradient = fgCtx.createLinearGradient(0, 0, size, size);
+                gradient = ctx.createLinearGradient(0, 0, size, size);
             } else if (gradDir === 'radial') {
-                gradient = fgCtx.createRadialGradient(size/2, size/2, 10, size/2, size/2, size/2);
+                gradient = ctx.createRadialGradient(size/2, size/2, 10, size/2, size/2, size/2);
             }
             
             gradient.addColorStop(0, gradStart);
             gradient.addColorStop(1, gradEnd);
-            fgCtx.fillStyle = gradient;
+            ctx.fillStyle = gradient;
         } else {
-            fgCtx.fillStyle = qrFgColorInput.value;
+            ctx.fillStyle = qrFgColorInput.value;
         }
         
-        fgCtx.fillRect(0, 0, size, size);
+        ctx.fillRect(0, 0, size, size);
         
-        // 3. Draw masked color foreground modules onto main canvas
-        ctx.drawImage(fgCanvas, 0, 0);
+        // 2. Draw solid background behind the colored modules
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, size, size);
         
-        // 4. Render Center Logo
+        // 3. Reset composite operation to default
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // 4. Draw Center Logo
         if (logoImg.src && !logoImg.classList.contains('hidden')) {
             drawLogoOnCanvas(ctx, size);
         }
