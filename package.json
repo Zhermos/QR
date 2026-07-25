@@ -1,0 +1,22 @@
+{
+  "name": "qrcraft",
+  "version": "1.0.0",
+  "description": "เครื่องมือสร้าง QR Code ครบวงจร - QRCraft",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx http-server -p 8080",
+    "dev": "npx http-server -p 8080"
+  },
+  "keywords": [
+    "qr",
+    "qrcode",
+    "generator",
+    "vcard",
+    "wifi"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

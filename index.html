@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRCraft - เครื่องมือสร้าง QR Code ครบวงจร</title>
+    <meta name="description" content="สร้าง QR Code ออนไลน์ฟรี รองรับทุกรูปแบบ เช่น ลิงก์, ข้อความ, Wi-Fi, นามบัตร vCard, อีเมล, เบอร์โทร, โลเคชัน และอื่น ๆ พร้อมปรับแต่งสีสันและใส่โลโก้ได้ทันที">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons (Local Fallback) -->
+    <script src="lucide.min.js"></script>
+    
+    <!-- Style Sheet -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- QRCode library (Local Fallback) -->
+    <script src="qrcode.min.js"></script>
+</head>
+<body>
+    <div class="background-gradients">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i data-lucide="qr-code"></i>
+                </div>
+                <h1>QRCraft<span>.io</span></h1>
+            </div>
+            <p class="subtitle">แปลงข้อมูลทุกประเภทเป็น QR Code ระดับมืออาชีพ ปรับแต่งสีสัน ใส่โลโก้ และดาวน์โหลดได้ทันที</p>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Left Side: Inputs -->
+            <section class="input-panel glass-card">
+                <!-- Tabs Navigation -->
+                <div class="tabs-container">
+                    <div class="tabs-scroll">
+                        <button class="tab-btn active" data-tab="url">
+                            <i data-lucide="link"></i>
+                            <span>ลิงก์ / URL</span>
+                        </button>
+                        <button class="tab-btn" data-tab="text">
+                            <i data-lucide="align-left"></i>
+                            <span>ข้อความ</span>
+                        </button>
+                        <button class="tab-btn" data-tab="wifi">
+                            <i data-lucide="wifi"></i>
+                            <span>Wi-Fi</span>
+                        </button>
+                        <button class="tab-btn" data-tab="vcard">
+                            <i data-lucide="contact-2"></i>
+                            <span>นามบัตร vCard</span>
+                        </button>
+                        <button class="tab-btn" data-tab="email">
+                            <i data-lucide="mail"></i>
+                            <span>อีเมล</span>
+                        </button>
+                        <button class="tab-btn" data-tab="sms">
+                            <i data-lucide="message-square"></i>
+                            <span>SMS</span>
+                        </button>
+                        <button class="tab-btn" data-tab="tel">
+                            <i data-lucide="phone"></i>
+                            <span>เบอร์โทร</span>
+                        </button>
+                        <button class="tab-btn" data-tab="whatsapp">
+                            <i data-lucide="message-circle"></i>
+                            <span>WhatsApp</span>
+                        </button>
+                        <button class="tab-btn" data-tab="social">
+                            <i data-lucide="share-2"></i>
+                            <span>โซเชียลมีเดีย</span>
+                        </button>
+                        <button class="tab-btn" data-tab="crypto">
+                            <i data-lucide="coins"></i>
+                            <span>คริปโต</span>
+                        </button>
+                        <button class="tab-btn" data-tab="event">
+                            <i data-lucide="calendar"></i>
+                            <span>ปฏิทิน / อีเวนต์</span>
+                        </button>
+                        <button class="tab-btn" data-tab="location">
+                            <i data-lucide="map-pin"></i>
+                            <span>แผนที่ / GPS</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Contents Form Group -->
+                <div class="form-container">
+                    <!-- URL Tab -->
+                    <div class="tab-content active" id="content-url">
+                        <h2>สร้าง QR Code สำหรับลิงก์</h2>
+                        <div class="input-group">
+                            <label for="url-input">ป้อน URL หรือ ลิงก์เว็บไซต์</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="globe" class="field-icon"></i>
+                                <input type="url" id="url-input" placeholder="https://example.com" value="https://google.com">
+                            </div>
+                            <span class="help-text">เช่น ลิงก์ร้านค้าออนไลน์, ลิงก์ Portfolio, หรือเว็บไซต์ใด ๆ</span>
+                        </div>
+                    </div>
+
+                    <!-- Text Tab -->
+                    <div class="tab-content" id="content-text">
+                        <h2>สร้าง QR Code สำหรับข้อความทั่วไป</h2>
+                        <div class="input-group">
+                            <label for="text-input">พิมพ์ข้อความที่ต้องการ</label>
+                            <div class="input-wrapper">
+                                <textarea id="text-input" rows="4" placeholder="พิมพ์ข้อความที่นี่ เช่น รหัสส่วนลด, ที่อยู่สำหรับจัดส่ง หรือข้อความสั้น..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wi-Fi Tab -->
+                    <div class="tab-content" id="content-wifi">
+                        <h2>สร้าง QR Code สำหรับเชื่อมต่อ Wi-Fi</h2>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="wifi-ssid">ชื่อเครือข่าย Wi-Fi (SSID)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="wifi" class="field-icon"></i>
+                                    <input type="text" id="wifi-ssid" placeholder="ชื่อเน็ตบ้าน หรือออฟฟิศ">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="wifi-password">รหัสผ่าน Wi-Fi</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="key" class="field-icon"></i>
+                                    <input type="password" id="wifi-password" placeholder="ใส่รหัสผ่าน (หากมี)">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="wifi-encryption">ประเภทความปลอดภัย</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="shield" class="field-icon"></i>
+                                    <select id="wifi-encryption">
+                                        <option value="WPA" selected>WPA/WPA2</option>
+                                        <option value="WEP">WEP</option>
+                                        <option value="nopass">ไม่มีรหัสผ่าน (เปิดสาธารณะ)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="wifi-hidden">
+                                    <span class="custom-checkbox"></span>
+                                    <span>เครือข่ายที่ซ่อนอยู่ (Hidden SSID)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- vCard Tab -->
+                    <div class="tab-content" id="content-vcard">
+                        <h2>สร้าง QR Code สำหรับนามบัตรดิจิทัล</h2>
+                        <p class="section-desc">เมื่อสแกนแล้ว ข้อมูลจะถูกบันทึกเข้ารายชื่อติดต่อในมือถือทันที</p>
+                        
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="vcard-fn">ชื่อจริง</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="user" class="field-icon"></i>
+                                    <input type="text" id="vcard-fn" placeholder="เช่น สมชาย">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="vcard-ln">นามสกุล</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="user" class="field-icon"></i>
+                                    <input type="text" id="vcard-ln" placeholder="เช่น ใจดี">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="vcard-mobile">เบอร์มือถือ</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="phone" class="field-icon"></i>
+                                    <input type="tel" id="vcard-mobile" placeholder="เช่น 0891234567">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="vcard-work">เบอร์ที่ทำงาน</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="phone-call" class="field-icon"></i>
+                                    <input type="tel" id="vcard-work" placeholder="เช่น 021234567">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="vcard-email">อีเมล</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="mail" class="field-icon"></i>
+                                    <input type="email" id="vcard-email" placeholder="example@email.com">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="vcard-url">เว็บไซต์</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="globe" class="field-icon"></i>
+                                    <input type="url" id="vcard-url" placeholder="https://mywebsite.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="vcard-org">บริษัท/องค์กร</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="building-2" class="field-icon"></i>
+                                    <input type="text" id="vcard-org" placeholder="เช่น บริษัท พัฒนา จำกัด">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="vcard-title">ตำแหน่งงาน</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="briefcase" class="field-icon"></i>
+                                    <input type="text" id="vcard-title" placeholder="เช่น Web Developer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="vcard-address">ที่อยู่ทำงาน/ที่อยู่บ้าน</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="map" class="field-icon"></i>
+                                <input type="text" id="vcard-address" placeholder="เลขที่ ถนน แขวง เขต จังหวัด รหัสไปรษณีย์">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Tab -->
+                    <div class="tab-content" id="content-email">
+                        <h2>สร้าง QR Code สำหรับส่งอีเมล</h2>
+                        <div class="input-group">
+                            <label for="email-to">ส่งถึง (Email Address)</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="mail" class="field-icon"></i>
+                                <input type="email" id="email-to" placeholder="target-recipient@email.com">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="email-subject">หัวข้ออีเมล (Subject)</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="type" class="field-icon"></i>
+                                <input type="text" id="email-subject" placeholder="เรื่องที่ต้องการส่ง">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="email-body">เนื้อหาข้อความ (Body)</label>
+                            <div class="input-wrapper">
+                                <textarea id="email-body" rows="3" placeholder="ระบุเนื้อความในอีเมลที่ต้องการให้ระบุอัตโนมัติ..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SMS Tab -->
+                    <div class="tab-content" id="content-sms">
+                        <h2>สร้าง QR Code สำหรับส่ง SMS</h2>
+                        <div class="grid-2" style="grid-template-columns: 1fr 2fr;">
+                            <div class="input-group">
+                                <label for="sms-phone">เบอร์ผู้รับ</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="phone" class="field-icon"></i>
+                                    <input type="tel" id="sms-phone" placeholder="เช่น 089xxxxxxx">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="sms-message">ข้อความ SMS</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="message-square" class="field-icon"></i>
+                                    <input type="text" id="sms-message" placeholder="พิมพ์ข้อความสั้น...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phone Tab -->
+                    <div class="tab-content" id="content-tel">
+                        <h2>สร้าง QR Code สำหรับโทรออก</h2>
+                        <div class="input-group">
+                            <label for="tel-number">เบอร์โทรศัพท์</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="phone" class="field-icon"></i>
+                                <input type="tel" id="tel-number" placeholder="เช่น 0891234567 หรือ 02xxxxxxx">
+                            </div>
+                            <span class="help-text">เมื่อสแกนจะเข้าสู่หน้าต่างกดเบอร์โทรศัพท์บนอุปกรณ์เคลื่อนที่ทันที</span>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Tab -->
+                    <div class="tab-content" id="content-whatsapp">
+                        <h2>สร้าง QR Code สำหรับแชท WhatsApp</h2>
+                        <div class="grid-2" style="grid-template-columns: 1fr 2fr;">
+                            <div class="input-group">
+                                <label for="wa-phone">เบอร์โทร (รวมรหัสประเทศ)</label>
+                                <div class="input-wrapper">
+                                    <span class="country-prefix">+66</span>
+                                    <input type="tel" id="wa-phone" placeholder="891234567" style="padding-left: 55px;">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="wa-message">ข้อความทักทาย (ตัวเลือกเสริม)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="message-circle" class="field-icon"></i>
+                                    <input type="text" id="wa-message" placeholder="ข้อความที่จะถูกพิมพ์ไว้เมื่อเข้าแชท">
+                                </div>
+                            </div>
+                        </div>
+                        <span class="help-text">สำหรับประเทศไทย ไม่ต้องใส่เลข 0 ตัวแรก เช่น 089-123-4567 ให้กรอก 891234567</span>
+                    </div>
+
+                    <!-- Social Tab -->
+                    <div class="tab-content" id="content-social">
+                        <h2>สร้าง QR Code สำหรับโซเชียลมีเดีย</h2>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="social-platform">เลือกแพลตฟอร์ม</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="layers" class="field-icon"></i>
+                                    <select id="social-platform">
+                                        <option value="facebook" selected>Facebook</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="x">X / Twitter</option>
+                                        <option value="youtube">YouTube</option>
+                                        <option value="tiktok">TikTok</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="line">Line (Add Friend URL)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="social-input" id="social-label-text">ชื่อผู้ใช้ (Username) หรือ ลิงก์โปรไฟล์</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="at-sign" id="social-icon" class="field-icon"></i>
+                                    <input type="text" id="social-input" placeholder="เช่น facebook-username">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crypto Tab -->
+                    <div class="tab-content" id="content-crypto">
+                        <h2>สร้าง QR Code สำหรับที่อยู่เหรียญคริปโต</h2>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="crypto-coin">เลือกเหรียญ</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="banknote" class="field-icon"></i>
+                                    <select id="crypto-coin">
+                                        <option value="bitcoin" selected>Bitcoin (BTC)</option>
+                                        <option value="ethereum">Ethereum (ETH) / ERC20</option>
+                                        <option value="solana">Solana (SOL)</option>
+                                        <option value="dogecoin">Dogecoin (DOGE)</option>
+                                        <option value="binance">BNB Smart Chain (BSC)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="crypto-address">ที่อยู่กระเป๋าเงิน (Wallet Address)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="wallet" class="field-icon"></i>
+                                    <input type="text" id="crypto-address" placeholder="วางที่อยู่กระเป๋าเงิน...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="crypto-amount">ระบุจำนวนที่เรียกเก็บ (ตัวเลือกเสริม)</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="dollar-sign" class="field-icon"></i>
+                                <input type="number" id="crypto-amount" step="any" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Event Tab -->
+                    <div class="tab-content" id="content-event">
+                        <h2>สร้าง QR Code สำหรับบันทึกปฏิทิน / กิจกรรม</h2>
+                        <div class="input-group">
+                            <label for="event-title">ชื่อกิจกรรม / Event Title</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="tag" class="field-icon"></i>
+                                <input type="text" id="event-title" placeholder="ชื่อกิจกรรมหรืองานประชุม">
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="event-start">วันที่เริ่มต้น</label>
+                                <div class="input-wrapper">
+                                    <input type="datetime-local" id="event-start">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="event-end">วันที่สิ้นสุด</label>
+                                <div class="input-wrapper">
+                                    <input type="datetime-local" id="event-end">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="event-location">สถานที่ (Location)</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="map-pin" class="field-icon"></i>
+                                <input type="text" id="event-location" placeholder="เช่น ชั้น 3 ห้อง A หรือลิงก์สถานที่">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="event-desc">รายละเอียดกิจกรรม</label>
+                            <div class="input-wrapper">
+                                <textarea id="event-desc" rows="3" placeholder="ระบุรายละเอียดกิจกรรมย่อ ๆ..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Tab -->
+                    <div class="tab-content" id="content-location">
+                        <h2>สร้าง QR Code สำหรับนำทางแผนที่ / พิกัด GPS</h2>
+                        <p class="section-desc">ป้อนพิกัด ละติจูดและลองจิจูด เพื่อนำทางบน Google Maps หรือแผนที่ในมือถือ</p>
+                        
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="geo-lat">ละติจูด (Latitude)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="navigation-2" class="field-icon"></i>
+                                    <input type="number" id="geo-lat" step="any" placeholder="เช่น 13.7563">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="geo-lng">ลองจิจูด (Longitude)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="navigation-2" class="field-icon"></i>
+                                    <input type="number" id="geo-lng" step="any" placeholder="เช่น 100.5018">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="map-helper">
+                            <button type="button" id="btn-get-location" class="btn-secondary">
+                                <i data-lucide="locate-fixed"></i>
+                                ใช้พิกัดปัจจุบันของฉัน
+                            </button>
+                            <span class="help-text">หรือ คัดลอกพิกัดจาก Google Maps มาป้อนได้เลย</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Preview & Settings -->
+            <section class="control-panel glass-card">
+                <div class="preview-header">
+                    <h2>ปรับแต่งและดูผลลัพธ์</h2>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="qr-preview-container">
+                    <div class="qr-canvas-holder">
+                        <canvas id="qr-canvas"></canvas>
+                        <div id="qr-placeholder" class="placeholder-active">
+                            <i data-lucide="qr-code"></i>
+                            <p>กรอกข้อมูลเพื่อสร้าง QR Code</p>
+                        </div>
+                    </div>
+                    <div class="qr-stats">
+                        <span id="char-counter">0 อักขระ</span>
+                        <span id="data-size">พร้อมทำรายการ</span>
+                    </div>
+                </div>
+
+                <!-- Styling Settings Form -->
+                <div class="settings-accordion">
+                    <!-- Section 1: Colors -->
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <i data-lucide="palette"></i>
+                            <span>การปรับแต่งสีสัน</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="setting-row">
+                                <label>ประเภทสี QR Code</label>
+                                <div class="radio-group">
+                                    <label class="radio-label">
+                                        <input type="radio" name="color-mode" value="solid" checked>
+                                        <span class="custom-radio"></span>
+                                        <span>สีเดียว (Solid)</span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="color-mode" value="gradient">
+                                        <span class="custom-radio"></span>
+                                        <span>ไล่ระดับสี (Gradient)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Solid Color Pickers -->
+                            <div class="color-inputs-grid" id="solid-color-settings">
+                                <div class="input-group">
+                                    <label for="qr-fg-color">สีของ QR Code</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="qr-fg-color" value="#0f172a">
+                                        <input type="text" id="qr-fg-hex" value="#0f172a">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="qr-bg-color">สีพื้นหลัง</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="qr-bg-color" value="#ffffff">
+                                        <input type="text" id="qr-bg-hex" value="#ffffff">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gradient Color Pickers -->
+                            <div class="color-inputs-grid hidden" id="gradient-color-settings">
+                                <div class="input-group">
+                                    <label for="qr-grad-start">สีเริ่มต้น</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="qr-grad-start" value="#4f46e5">
+                                        <input type="text" id="qr-grad-start-hex" value="#4f46e5">
+                                    </div>
+                                </div>
+                                <div class="input-group">
+                                    <label for="qr-grad-end">สีปลายทาง</label>
+                                    <div class="color-picker-wrapper">
+                                        <input type="color" id="qr-grad-end" value="#06b6d4">
+                                        <input type="text" id="qr-grad-end-hex" value="#06b6d4">
+                                    </div>
+                                </div>
+                                <div class="input-group" style="grid-column: span 2;">
+                                    <label for="qr-grad-dir">ทิศทางการไล่สี</label>
+                                    <select id="qr-grad-dir">
+                                        <option value="vertical" selected>แนวตั้ง (บนลงล่าง)</option>
+                                        <option value="horizontal">แนวนอน (ซ้ายไปขวา)</option>
+                                        <option value="diagonal">แนวทแยง (บนซ้ายไปล่างขวา)</option>
+                                        <option value="radial">เป็นวงกลม (กึ่งกลางออกมา)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Logo and Branding -->
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <i data-lucide="image"></i>
+                            <span>ใส่รูปโลโก้ส่วนตัว</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="logo-setting-group">
+                                <div class="logo-preview-box">
+                                    <div id="logo-preview-placeholder">
+                                        <i data-lucide="upload-cloud"></i>
+                                    </div>
+                                    <img id="logo-preview-img" src="#" alt="Logo Preview" class="hidden">
+                                    <button type="button" id="btn-remove-logo" class="hidden" title="ลบโลโก้ออก">
+                                        <i data-lucide="x"></i>
+                                    </button>
+                                </div>
+                                <div class="logo-upload-controls">
+                                    <label class="btn-secondary logo-upload-label">
+                                        <i data-lucide="file-image"></i>
+                                        <span>เลือกรูปภาพ</span>
+                                        <input type="file" id="logo-upload" accept="image/*">
+                                    </label>
+                                    <p class="help-text">รองรับ PNG, JPG, WebP ขนาดรูปภาพที่แนะนำไม่เกิน 500KB</p>
+                                </div>
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="logo-size">ขนาดของโลโก้ (%)</label>
+                                    <div class="slider-wrapper">
+                                        <input type="range" id="logo-size" min="10" max="25" value="18">
+                                        <span class="slider-val" id="logo-size-val">18%</span>
+                                    </div>
+                                </div>
+                                <div class="input-group checkbox-group" style="justify-content: flex-end; padding-bottom: 5px;">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="logo-border" checked>
+                                        <span class="custom-checkbox"></span>
+                                        <span>เพิ่มขอบสีขาวรอบโลโก้</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Advanced Options -->
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <i data-lucide="settings-2"></i>
+                            <span>ตั้งค่าขั้นสูง (ขนาดและความละเอียด)</span>
+                            <i data-lucide="chevron-down" class="chevron"></i>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="qr-size">ขนาดพิกเซล QR Code</label>
+                                    <select id="qr-size">
+                                        <option value="256">256 x 256 px</option>
+                                        <option value="512" selected>512 x 512 px (มาตรฐาน)</option>
+                                        <option value="1000">1000 x 1000 px (ความคมชัดสูง)</option>
+                                        <option value="2000">2000 x 2000 px (สิ่งพิมพ์ขนาดใหญ่)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="qr-margin">ขนาดขอบ (Quiet Zone)</label>
+                                    <select id="qr-margin">
+                                        <option value="1">น้อยที่สุด (1)</option>
+                                        <option value="2">กระชับ (2)</option>
+                                        <option value="4" selected>มาตรฐาน (4)</option>
+                                        <option value="6">กว้าง (6)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="qr-ecc">ระดับความถูกต้อง (Error Correction)</label>
+                                    <select id="qr-ecc">
+                                        <option value="L">L (7% ตรวจสอบความถูกต้องต่ำ)</option>
+                                        <option value="M">M (15% ปานกลาง)</option>
+                                        <option value="Q">Q (25% สูง - แนะนำเมื่อใส่โลโก้)</option>
+                                        <option value="H" selected>H (30% สูงสุด - ปลอดภัยสุดสำหรับโลโก้)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="align-self: end; padding-bottom: 12px;">
+                                    <div class="ecc-warning">
+                                        <i data-lucide="info"></i>
+                                        <span>ระดับความถูกต้องสูงขึ้นจะช่วยให้สแกนง่ายขึ้นแม้ว่าจะมีโลโก้ทับอยู่ตรงกลาง</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Action Buttons -->
+                <div class="export-actions">
+                    <button type="button" id="btn-copy" class="btn-secondary">
+                        <i data-lucide="copy"></i>
+                        <span>คัดลอกรูปภาพ</span>
+                    </button>
+                    <button type="button" id="btn-download-png" class="btn-primary">
+                        <i data-lucide="download"></i>
+                        <span>ดาวน์โหลด PNG</span>
+                    </button>
+                </div>
+
+                <div class="extra-actions">
+                    <button type="button" id="btn-download-svg" class="btn-text">
+                        <i data-lucide="file-code"></i>
+                        <span>ดาวน์โหลดเป็น SVG</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast hidden">
+            <i data-lucide="check-circle-2"></i>
+            <span id="toast-message">คัดลอกสำเร็จ!</span>
+        </div>
+
+        <!-- Info / Footer Section -->
+        <footer class="app-footer">
+            <p>&copy; 2026 QRCraft - ผลงานการออกแบบเว็บสุดหรูระดับ Premium</p>
+        </footer>
+    </div>
+
+    <!-- Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
