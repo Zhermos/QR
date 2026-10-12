@@ -30,6 +30,99 @@ function formatVCalendarDate(dateTimeStr) {
     return dateTimeStr.replace(/[-:]/g, '') + '00';
 }
 
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function normalizeGoogleDriveUrl(url, mode) {
+    if (!url) return '';
+    const match = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/i);
+    if (!match) return url;
+    const fileId = match[1];
+    if (mode === 'image') {
+        return 'https://lh3.googleusercontent.com/d/' + fileId;
+    }
+    // PDF or Video preview direct viewer
+    return 'https://drive.google.com/file/d/' + fileId + '/preview';
+}
+
+function extractYouTubeId(url) {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+function normalizeVideoUrl(url) {
+    if (!url) return '';
+    if (url.includes('drive.google.com')) {
+        return normalizeGoogleDriveUrl(url, 'video');
+    }
+    return url;
+}
+
+function uploadFileToCloud(file, progressBar, progressWrapper, statusLabel, percentLabel, onComplete, onError) {
+    if (progressWrapper) progressWrapper.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+    if (percentLabel) percentLabel.textContent = '0%';
+    if (statusLabel) statusLabel.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> กำลังอัปโหลดขึ้น Cloud...';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://tmpfiles.org/api/v1/upload', true);
+
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            if (progressBar) progressBar.style.width = pct + '%';
+            if (percentLabel) percentLabel.textContent = pct + '%';
+        }
+    };
+
+    xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                const json = JSON.parse(xhr.responseText);
+                if (json && json.data && json.data.url) {
+                    const directUrl = json.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (percentLabel) percentLabel.textContent = '100%';
+                    if (statusLabel) statusLabel.innerHTML = '<i data-lucide="check-circle-2" style="color:var(--success)"></i> อัปโหลดสำเร็จ!';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    setTimeout(function () {
+                        if (progressWrapper) progressWrapper.classList.add('hidden');
+                    }, 2500);
+                    onComplete(directUrl);
+                    return;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        handleFail('การประมวลผลล้มเหลว');
+    };
+
+    xhr.onerror = function () {
+        handleFail('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์อัปโหลดได้');
+    };
+
+    function handleFail(msg) {
+        if (statusLabel) statusLabel.innerHTML = '<i data-lucide="alert-circle" style="color:var(--danger)"></i> ' + msg;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (onError) onError(msg);
+        showToast('อัปโหลดไม่สำเร็จ: ' + msg);
+    }
+
+    xhr.send(formData);
+}
+
 // --- Main Application Boot ---
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -110,6 +203,41 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!url) return '';
                 if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
                 return url;
+            }
+            case 'pdf': {
+                const isUpload = document.querySelector('#pdf-mode-pills .submode-pill.active')?.getAttribute('data-submode') === 'upload';
+                if (isUpload) {
+                    return document.getElementById('pdf-direct-url').value.trim();
+                } else {
+                    let u = document.getElementById('pdf-link-input').value.trim();
+                    if (!u) return '';
+                    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+                    if (u.includes('drive.google.com')) u = normalizeGoogleDriveUrl(u, 'pdf');
+                    return u;
+                }
+            }
+            case 'image': {
+                const isUpload = document.querySelector('#image-mode-pills .submode-pill.active')?.getAttribute('data-submode') === 'upload';
+                if (isUpload) {
+                    return document.getElementById('img-direct-url').value.trim();
+                } else {
+                    let u = document.getElementById('img-link-input').value.trim();
+                    if (!u) return '';
+                    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+                    if (u.includes('drive.google.com')) u = normalizeGoogleDriveUrl(u, 'image');
+                    return u;
+                }
+            }
+            case 'video': {
+                const isUpload = document.querySelector('#video-mode-pills .submode-pill.active')?.getAttribute('data-submode') === 'upload';
+                if (isUpload) {
+                    return document.getElementById('video-direct-url').value.trim();
+                } else {
+                    let u = document.getElementById('video-link-input').value.trim();
+                    if (!u) return '';
+                    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+                    return normalizeVideoUrl(u);
+                }
             }
             case 'text':
                 return document.getElementById('text-input').value;
@@ -386,6 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var id = btn.getAttribute('data-tab');
             var el = document.getElementById('content-' + id);
             if (el) el.classList.add('active');
+            try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) {}
             generateQRCode();
         });
     });
@@ -404,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 6) Bind all inputs → regenerate
     document.querySelectorAll('input, textarea, select').forEach(function (el) {
-        if (el.id && (el.id.endsWith('-hex') || el.id === 'logo-upload')) return;
+        if (el.type === 'file' || (el.id && (el.id.endsWith('-hex') || el.id === 'scanner-result-text'))) return;
         el.addEventListener('input',  generateQRCode);
         el.addEventListener('change', generateQRCode);
     });
@@ -550,6 +679,630 @@ document.addEventListener('DOMContentLoaded', function () {
             a.href = URL.createObjectURL(blob);
             a.click();
             showToast('ดาวน์โหลด SVG สำเร็จ!');
+        });
+    }
+
+    // ============================================================
+    // 13) Submode Pill Switching (PDF, Image, Video)
+    // ============================================================
+    document.querySelectorAll('.submode-pills').forEach(function (container) {
+        var pills = container.querySelectorAll('.submode-pill');
+        pills.forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                pills.forEach(function (p) { p.classList.remove('active'); });
+                pill.classList.add('active');
+                var panelId = pill.getAttribute('data-panel');
+                var parentTab = container.closest('.tab-content');
+                if (parentTab) {
+                    parentTab.querySelectorAll('.submode-panel').forEach(function (panel) {
+                        panel.classList.add('hidden');
+                        panel.classList.remove('active');
+                    });
+                    var targetPanel = parentTab.querySelector('#' + panelId);
+                    if (targetPanel) {
+                        targetPanel.classList.remove('hidden');
+                        targetPanel.classList.add('active');
+                    }
+                }
+                generateQRCode();
+            });
+        });
+    });
+
+    // Helper: Setup Drag & Drop on a dropzone
+    function setupDropzone(dropzoneEl, fileInputEl, onFileDrop) {
+        if (!dropzoneEl || !fileInputEl) return;
+        dropzoneEl.addEventListener('click', function (e) {
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('video')) return;
+            fileInputEl.click();
+        });
+        ['dragenter', 'dragover'].forEach(function (evName) {
+            dropzoneEl.addEventListener(evName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzoneEl.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(function (evName) {
+            dropzoneEl.addEventListener(evName, function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzoneEl.classList.remove('dragover');
+            });
+        });
+        dropzoneEl.addEventListener('drop', function (e) {
+            var files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                onFileDrop(files[0]);
+            }
+        });
+        fileInputEl.addEventListener('change', function (e) {
+            if (e.target.files && e.target.files.length > 0) {
+                onFileDrop(e.target.files[0]);
+            }
+        });
+    }
+
+    // ============================================================
+    // 14) PDF Tab Handlers
+    // ============================================================
+    var pdfDropzone      = document.getElementById('pdf-dropzone');
+    var pdfFileInput     = document.getElementById('pdf-file-input');
+    var pdfDropzoneInner = document.getElementById('pdf-dropzone-inner');
+    var pdfFileCard      = document.getElementById('pdf-file-card');
+    var pdfFileName      = document.getElementById('pdf-file-name');
+    var pdfFileSize      = document.getElementById('pdf-file-size');
+    var btnRemovePdf     = document.getElementById('btn-remove-pdf-file');
+    var pdfProgressWrap  = document.getElementById('pdf-progress-wrapper');
+    var pdfProgressBar   = document.getElementById('pdf-progress-bar');
+    var pdfProgressStatus= document.getElementById('pdf-progress-status');
+    var pdfProgressPct   = document.getElementById('pdf-progress-percent');
+    var pdfDirectUrl     = document.getElementById('pdf-direct-url');
+    var pdfLinkInput     = document.getElementById('pdf-link-input');
+    var btnTestPdf       = document.getElementById('btn-test-pdf');
+    var btnTestPdfLink   = document.getElementById('btn-test-pdf-link');
+
+    setupDropzone(pdfDropzone, pdfFileInput, function (file) {
+        if (!file) return;
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            showToast('กรุณาเลือกไฟล์ PDF เท่านั้น');
+            return;
+        }
+        if (file.size > 104857600) {
+            showToast('ไฟล์มีขนาดเกิน 100MB');
+            return;
+        }
+        pdfFileName.textContent = file.name;
+        pdfFileSize.textContent = formatFileSize(file.size);
+        pdfDropzoneInner.classList.add('hidden');
+        pdfFileCard.classList.remove('hidden');
+
+        uploadFileToCloud(
+            file,
+            pdfProgressBar,
+            pdfProgressWrap,
+            pdfProgressStatus,
+            pdfProgressPct,
+            function (url) {
+                pdfDirectUrl.value = url;
+                btnTestPdf.disabled = false;
+                generateQRCode();
+                showToast('อัปโหลด PDF และสร้าง QR Code สำเร็จ!');
+            },
+            function () {
+                btnTestPdf.disabled = true;
+            }
+        );
+    });
+
+    if (btnRemovePdf) {
+        btnRemovePdf.addEventListener('click', function (e) {
+            e.stopPropagation();
+            pdfFileInput.value = '';
+            pdfDirectUrl.value = '';
+            btnTestPdf.disabled = true;
+            pdfFileCard.classList.add('hidden');
+            pdfDropzoneInner.classList.remove('hidden');
+            if (pdfProgressWrap) pdfProgressWrap.classList.add('hidden');
+            generateQRCode();
+        });
+    }
+
+    if (btnTestPdf) {
+        btnTestPdf.addEventListener('click', function () {
+            var u = pdfDirectUrl.value.trim();
+            if (u) window.open(u, '_blank');
+        });
+    }
+
+    if (pdfDirectUrl) {
+        pdfDirectUrl.addEventListener('input', function () {
+            btnTestPdf.disabled = !this.value.trim();
+            generateQRCode();
+        });
+    }
+
+    if (pdfLinkInput) {
+        pdfLinkInput.addEventListener('input', function () {
+            btnTestPdfLink.disabled = !this.value.trim();
+            generateQRCode();
+        });
+    }
+
+    if (btnTestPdfLink) {
+        btnTestPdfLink.addEventListener('click', function () {
+            var u = pdfLinkInput.value.trim();
+            if (u) window.open(normalizeGoogleDriveUrl(u, 'pdf'), '_blank');
+        });
+    }
+
+    // PDF Presets
+    var presetPdfGdrive = document.getElementById('preset-pdf-gdrive');
+    if (presetPdfGdrive) {
+        presetPdfGdrive.addEventListener('click', function () {
+            pdfLinkInput.placeholder = 'https://drive.google.com/file/d/YOUR_FILE_ID/view?usp=sharing';
+            pdfLinkInput.focus();
+            showToast('วางลิงก์ Google Drive ของไฟล์ PDF ได้เลย ระบบจะแปลงให้อัตโนมัติ');
+        });
+    }
+    var presetPdfCanva = document.getElementById('preset-pdf-canva');
+    if (presetPdfCanva) {
+        presetPdfCanva.addEventListener('click', function () {
+            pdfLinkInput.placeholder = 'https://www.canva.com/design/.../view';
+            pdfLinkInput.focus();
+            showToast('วางลิงก์ Canva PDF ของคุณได้เลย');
+        });
+    }
+    var presetPdfOnedrive = document.getElementById('preset-pdf-onedrive');
+    if (presetPdfOnedrive) {
+        presetPdfOnedrive.addEventListener('click', function () {
+            pdfLinkInput.placeholder = 'https://1drv.ms/b/...';
+            pdfLinkInput.focus();
+            showToast('วางลิงก์ OneDrive ได้เลย');
+        });
+    }
+
+    // ============================================================
+    // 15) Image Tab Handlers
+    // ============================================================
+    var imgDropzone       = document.getElementById('img-dropzone');
+    var imgFileInput      = document.getElementById('img-file-input');
+    var imgDropzoneInner  = document.getElementById('img-dropzone-inner');
+    var imgPreviewCard    = document.getElementById('img-preview-card');
+    var imgFileThumb      = document.getElementById('img-file-thumb');
+    var imgFileName       = document.getElementById('img-file-name');
+    var imgFileSize       = document.getElementById('img-file-size');
+    var btnRemoveImg      = document.getElementById('btn-remove-img-file');
+    var imgProgressWrap   = document.getElementById('img-progress-wrapper');
+    var imgProgressBar    = document.getElementById('img-progress-bar');
+    var imgProgressStatus = document.getElementById('img-progress-status');
+    var imgProgressPct    = document.getElementById('img-progress-percent');
+    var imgDirectUrl      = document.getElementById('img-direct-url');
+    var imgLinkInput      = document.getElementById('img-link-input');
+    var btnTestImg        = document.getElementById('btn-test-img');
+    var btnTestImgLink    = document.getElementById('btn-test-img-link');
+
+    setupDropzone(imgDropzone, imgFileInput, function (file) {
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+            return;
+        }
+        if (file.size > 52428800) {
+            showToast('ไฟล์มีขนาดเกิน 50MB');
+            return;
+        }
+        imgFileName.textContent = file.name;
+        imgFileSize.textContent = formatFileSize(file.size);
+
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            imgFileThumb.src = ev.target.result;
+            imgDropzoneInner.classList.add('hidden');
+            imgPreviewCard.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+
+        uploadFileToCloud(
+            file,
+            imgProgressBar,
+            imgProgressWrap,
+            imgProgressStatus,
+            imgProgressPct,
+            function (url) {
+                imgDirectUrl.value = url;
+                btnTestImg.disabled = false;
+                generateQRCode();
+                showToast('อัปโหลดรูปภาพและสร้าง QR Code สำเร็จ!');
+            },
+            function () {
+                btnTestImg.disabled = true;
+            }
+        );
+    });
+
+    if (btnRemoveImg) {
+        btnRemoveImg.addEventListener('click', function (e) {
+            e.stopPropagation();
+            imgFileInput.value = '';
+            imgDirectUrl.value = '';
+            btnTestImg.disabled = true;
+            imgPreviewCard.classList.add('hidden');
+            imgDropzoneInner.classList.remove('hidden');
+            if (imgProgressWrap) imgProgressWrap.classList.add('hidden');
+            generateQRCode();
+        });
+    }
+
+    if (btnTestImg) {
+        btnTestImg.addEventListener('click', function () {
+            var u = imgDirectUrl.value.trim();
+            if (u) window.open(u, '_blank');
+        });
+    }
+
+    if (imgDirectUrl) {
+        imgDirectUrl.addEventListener('input', function () {
+            btnTestImg.disabled = !this.value.trim();
+            generateQRCode();
+        });
+    }
+
+    if (imgLinkInput) {
+        imgLinkInput.addEventListener('input', function () {
+            btnTestImgLink.disabled = !this.value.trim();
+            generateQRCode();
+        });
+    }
+
+    if (btnTestImgLink) {
+        btnTestImgLink.addEventListener('click', function () {
+            var u = imgLinkInput.value.trim();
+            if (u) window.open(normalizeGoogleDriveUrl(u, 'image'), '_blank');
+        });
+    }
+
+    // Image Presets
+    var presetImgGdrive = document.getElementById('preset-img-gdrive');
+    if (presetImgGdrive) {
+        presetImgGdrive.addEventListener('click', function () {
+            imgLinkInput.placeholder = 'https://drive.google.com/file/d/YOUR_IMAGE_ID/view?usp=sharing';
+            imgLinkInput.focus();
+            showToast('วางลิงก์ Google Drive ของรูปภาพได้เลย');
+        });
+    }
+    var presetImgImgur = document.getElementById('preset-img-imgur');
+    if (presetImgImgur) {
+        presetImgImgur.addEventListener('click', function () {
+            imgLinkInput.placeholder = 'https://i.imgur.com/...';
+            imgLinkInput.focus();
+            showToast('วางลิงก์ Imgur ได้เลย');
+        });
+    }
+    var presetImgIcloud = document.getElementById('preset-img-icloud');
+    if (presetImgIcloud) {
+        presetImgIcloud.addEventListener('click', function () {
+            imgLinkInput.placeholder = 'https://share.icloud.com/photos/...';
+            imgLinkInput.focus();
+            showToast('วางลิงก์ iCloud รูปภาพได้เลย');
+        });
+    }
+
+    // ============================================================
+    // 16) Video Tab Handlers
+    // ============================================================
+    var videoDropzone       = document.getElementById('video-dropzone');
+    var videoFileInput      = document.getElementById('video-file-input');
+    var videoDropzoneInner  = document.getElementById('video-dropzone-inner');
+    var videoFileCard       = document.getElementById('video-file-card');
+    var videoLocalPlayer    = document.getElementById('video-local-player');
+    var videoFileName       = document.getElementById('video-file-name');
+    var videoFileSize       = document.getElementById('video-file-size');
+    var btnRemoveVideo      = document.getElementById('btn-remove-video-file');
+    var videoProgressWrap   = document.getElementById('video-progress-wrapper');
+    var videoProgressBar    = document.getElementById('video-progress-bar');
+    var videoProgressStatus = document.getElementById('video-progress-status');
+    var videoProgressPct    = document.getElementById('video-progress-percent');
+    var videoDirectUrl      = document.getElementById('video-direct-url');
+    var videoLinkInput      = document.getElementById('video-link-input');
+    var btnTestVideo        = document.getElementById('btn-test-video');
+    var btnTestVideoLink    = document.getElementById('btn-test-video-link');
+    var videoEmbedWrapper   = document.getElementById('video-embed-preview');
+    var videoEmbedContainer = document.getElementById('video-embed-container');
+
+    setupDropzone(videoDropzone, videoFileInput, function (file) {
+        if (!file) return;
+        if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|mov|webm|m4v|mkv)$/i)) {
+            showToast('กรุณาเลือกไฟล์คลิปวิดีโอเท่านั้น');
+            return;
+        }
+        if (file.size > 104857600) {
+            showToast('ไฟล์วิดีโอมีขนาดเกิน 100MB');
+            return;
+        }
+        videoFileName.textContent = file.name;
+        videoFileSize.textContent = formatFileSize(file.size);
+
+        var blobUrl = URL.createObjectURL(file);
+        videoLocalPlayer.src = blobUrl;
+        videoDropzoneInner.classList.add('hidden');
+        videoFileCard.classList.remove('hidden');
+
+        uploadFileToCloud(
+            file,
+            videoProgressBar,
+            videoProgressWrap,
+            videoProgressStatus,
+            videoProgressPct,
+            function (url) {
+                videoDirectUrl.value = url;
+                btnTestVideo.disabled = false;
+                generateQRCode();
+                showToast('อัปโหลดคลิปวิดีโอและสร้าง QR Code สำเร็จ!');
+            },
+            function () {
+                btnTestVideo.disabled = true;
+            }
+        );
+    });
+
+    if (btnRemoveVideo) {
+        btnRemoveVideo.addEventListener('click', function (e) {
+            e.stopPropagation();
+            videoFileInput.value = '';
+            videoDirectUrl.value = '';
+            if (videoLocalPlayer.src) {
+                videoLocalPlayer.pause();
+                videoLocalPlayer.src = '';
+            }
+            btnTestVideo.disabled = true;
+            videoFileCard.classList.add('hidden');
+            videoDropzoneInner.classList.remove('hidden');
+            if (videoProgressWrap) videoProgressWrap.classList.add('hidden');
+            generateQRCode();
+        });
+    }
+
+    if (btnTestVideo) {
+        btnTestVideo.addEventListener('click', function () {
+            var u = videoDirectUrl.value.trim();
+            if (u) window.open(u, '_blank');
+        });
+    }
+
+    if (videoDirectUrl) {
+        videoDirectUrl.addEventListener('input', function () {
+            btnTestVideo.disabled = !this.value.trim();
+            generateQRCode();
+        });
+    }
+
+    // Video Link embed preview helper
+    function updateVideoEmbedPreview(url) {
+        if (!videoEmbedWrapper || !videoEmbedContainer) return;
+        var ytId = extractYouTubeId(url);
+        if (ytId) {
+            videoEmbedContainer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>';
+            videoEmbedWrapper.classList.remove('hidden');
+            return;
+        }
+        if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
+            videoEmbedContainer.innerHTML = '<video src="' + url + '" controls style="width:100%; height:220px;"></video>';
+            videoEmbedWrapper.classList.remove('hidden');
+            return;
+        }
+        videoEmbedContainer.innerHTML = '';
+        videoEmbedWrapper.classList.add('hidden');
+    }
+
+    if (videoLinkInput) {
+        videoLinkInput.addEventListener('input', function () {
+            var val = this.value.trim();
+            btnTestVideoLink.disabled = !val;
+            updateVideoEmbedPreview(val);
+            generateQRCode();
+        });
+    }
+
+    if (btnTestVideoLink) {
+        btnTestVideoLink.addEventListener('click', function () {
+            var u = videoLinkInput.value.trim();
+            if (u) window.open(normalizeVideoUrl(u), '_blank');
+        });
+    }
+
+    // Video Presets
+    var presetVidYt = document.getElementById('preset-video-youtube');
+    if (presetVidYt) {
+        presetVidYt.addEventListener('click', function () {
+            videoLinkInput.placeholder = 'https://www.youtube.com/watch?v=... หรือ shorts/...';
+            videoLinkInput.focus();
+            showToast('วางลิงก์ YouTube ได้เลย');
+        });
+    }
+    var presetVidTt = document.getElementById('preset-video-tiktok');
+    if (presetVidTt) {
+        presetVidTt.addEventListener('click', function () {
+            videoLinkInput.placeholder = 'https://www.tiktok.com/@user/video/...';
+            videoLinkInput.focus();
+            showToast('วางลิงก์ TikTok ได้เลย');
+        });
+    }
+    var presetVidReels = document.getElementById('preset-video-reels');
+    if (presetVidReels) {
+        presetVidReels.addEventListener('click', function () {
+            videoLinkInput.placeholder = 'https://www.instagram.com/reel/...';
+            videoLinkInput.focus();
+            showToast('วางลิงก์ Instagram Reels ได้เลย');
+        });
+    }
+    var presetVidGdrive = document.getElementById('preset-video-gdrive');
+    if (presetVidGdrive) {
+        presetVidGdrive.addEventListener('click', function () {
+            videoLinkInput.placeholder = 'https://drive.google.com/file/d/YOUR_VIDEO_ID/view?usp=sharing';
+            videoLinkInput.focus();
+            showToast('วางลิงก์ Google Drive คลิปวิดีโอได้เลย');
+        });
+    }
+
+    // ============================================================
+    // 17) QR Code Scanner / Decoder Handlers
+    // ============================================================
+    var btnOpenScanner     = document.getElementById('btn-open-scanner');
+    var btnCloseScanner    = document.getElementById('btn-close-scanner');
+    var scannerModal       = document.getElementById('scanner-modal');
+    var scannerDropzone    = document.getElementById('scanner-dropzone');
+    var scannerFileInput   = document.getElementById('scanner-file-input');
+    var scannerPreviewBox  = document.getElementById('scanner-preview-box');
+    var scannerPreviewImg  = document.getElementById('scanner-preview-img');
+    var scannerStatusText  = document.getElementById('scanner-status-text');
+    var scannerResultBox   = document.getElementById('scanner-result-box');
+    var scannerResultText  = document.getElementById('scanner-result-text');
+    var btnCopyScan        = document.getElementById('btn-copy-scan');
+    var btnOpenScanLink    = document.getElementById('btn-open-scan-link');
+    var btnUseScanText     = document.getElementById('btn-use-scan-text');
+
+    if (btnOpenScanner && scannerModal) {
+        btnOpenScanner.addEventListener('click', function () {
+            scannerModal.classList.remove('hidden');
+            try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e) {}
+        });
+    }
+
+    if (btnCloseScanner && scannerModal) {
+        btnCloseScanner.addEventListener('click', function () {
+            scannerModal.classList.add('hidden');
+        });
+    }
+
+    if (scannerModal) {
+        scannerModal.addEventListener('click', function (e) {
+            if (e.target === scannerModal) scannerModal.classList.add('hidden');
+        });
+    }
+
+    // Scanner file dropzone
+    setupDropzone(scannerDropzone, scannerFileInput, function (file) {
+        if (!file || !file.type.startsWith('image/')) {
+            showToast('กรุณาเลือกไฟล์ภาพ QR Code');
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            var dataUrl = ev.target.result;
+            scannerPreviewImg.src = dataUrl;
+            scannerPreviewBox.classList.remove('hidden');
+            scannerResultBox.classList.add('hidden');
+            scannerStatusText.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> กำลังถอดรหัส QR Code...';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            var scanImg = new Image();
+            scanImg.onload = function () {
+                var cvs = document.createElement('canvas');
+                cvs.width = scanImg.naturalWidth;
+                cvs.height = scanImg.naturalHeight;
+                var ctx = cvs.getContext('2d');
+                ctx.drawImage(scanImg, 0, 0);
+
+                // 1. Try native BarcodeDetector if available
+                if ('BarcodeDetector' in window) {
+                    try {
+                        var detector = new BarcodeDetector({ formats: ['qr_code'] });
+                        detector.detect(cvs).then(function (barcodes) {
+                            if (barcodes && barcodes.length > 0) {
+                                onScanSuccess(barcodes[0].rawValue);
+                            } else {
+                                fallbackToJsQR();
+                            }
+                        }).catch(function () {
+                            fallbackToJsQR();
+                        });
+                        return;
+                    } catch (e) {
+                        fallbackToJsQR();
+                        return;
+                    }
+                } else {
+                    fallbackToJsQR();
+                }
+
+                function fallbackToJsQR() {
+                    // 2. Try jsQR
+                    if (typeof jsQR !== 'undefined') {
+                        try {
+                            var imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+                            var code = jsQR(imgData.data, imgData.width, imgData.height, {
+                                inversionAttempts: 'attemptBoth'
+                            });
+                            if (code && code.data) {
+                                onScanSuccess(code.data);
+                                return;
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                    onScanFail();
+                }
+
+                function onScanSuccess(result) {
+                    scannerStatusText.innerHTML = '<i data-lucide="check-circle-2" style="color:var(--success)"></i> ถอดรหัสสำเร็จ!';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    scannerResultText.value = result;
+                    scannerResultBox.classList.remove('hidden');
+
+                    if (/^https?:\/\//i.test(result)) {
+                        btnOpenScanLink.href = result;
+                        btnOpenScanLink.classList.remove('hidden');
+                    } else {
+                        btnOpenScanLink.classList.add('hidden');
+                    }
+                }
+
+                function onScanFail() {
+                    scannerStatusText.innerHTML = '<i data-lucide="alert-triangle" style="color:var(--warning)"></i> ไม่พบ QR Code ในภาพนี้ กรุณาลองภาพที่คมชัดขึ้น';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            };
+            scanImg.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    if (btnCopyScan) {
+        btnCopyScan.addEventListener('click', function () {
+            var txt = scannerResultText.value;
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(function () {
+                showToast('คัดลอกข้อความสำเร็จ!');
+            }).catch(function () {
+                scannerResultText.select();
+                document.execCommand('copy');
+                showToast('คัดลอกสำเร็จ!');
+            });
+        });
+    }
+
+    if (btnUseScanText) {
+        btnUseScanText.addEventListener('click', function () {
+            var txt = scannerResultText.value.trim();
+            if (!txt) return;
+            scannerModal.classList.add('hidden');
+
+            if (/^https?:\/\//i.test(txt)) {
+                var urlTabBtn = document.querySelector('.tab-btn[data-tab="url"]');
+                if (urlTabBtn) urlTabBtn.click();
+                var urlInput = document.getElementById('url-input');
+                if (urlInput) urlInput.value = txt;
+            } else {
+                var textTabBtn = document.querySelector('.tab-btn[data-tab="text"]');
+                if (textTabBtn) textTabBtn.click();
+                var textInput = document.getElementById('text-input');
+                if (textInput) textInput.value = txt;
+            }
+            generateQRCode();
+            showToast('นำข้อมูลเข้าสู่ตัวสร้าง QR Code สำเร็จ!');
         });
     }
 

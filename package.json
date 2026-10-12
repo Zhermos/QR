@@ -11,6 +11,9 @@
     "qr",
     "qrcode",
     "generator",
+    "pdf",
+    "image",
+    "video",
     "vcard",
     "wifi"
   ],

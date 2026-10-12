@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRCraft - เครื่องมือสร้าง QR Code ครบวงจร</title>
-    <meta name="description" content="สร้าง QR Code ออนไลน์ฟรี รองรับทุกรูปแบบ เช่น ลิงก์, ข้อความ, Wi-Fi, นามบัตร vCard, อีเมล, เบอร์โทร, โลเคชัน และอื่น ๆ พร้อมปรับแต่งสีสันและใส่โลโก้ได้ทันที">
+    <title>QRCraft - เครื่องมือสร้าง QR Code สไตล์มินิมอล เรียบง่าย ครบวงจร</title>
+    <meta name="description" content="สร้าง QR Code สไตล์มินิมอล เรียบง่าย เข้าถึงง่าย รองรับลิงก์, ไฟล์ PDF, รูปภาพ, คลิปวิดีโอ, ข้อความ, Wi-Fi, นามบัตร vCard พร้อมปรับแต่งสีสันและดาวน์โหลดทันที">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,13 +30,19 @@
     <div class="app-container">
         <!-- Header -->
         <header class="main-header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i data-lucide="qr-code"></i>
+            <div class="header-content-wrapper">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i data-lucide="qr-code"></i>
+                    </div>
+                    <h1>QRCraft<span>.io</span></h1>
                 </div>
-                <h1>QRCraft<span>.io</span></h1>
+                <button type="button" id="btn-open-scanner" class="btn-scanner-header">
+                    <i data-lucide="scan-line"></i>
+                    <span>สแกน / ถอดรหัส QR Code</span>
+                </button>
             </div>
-            <p class="subtitle">แปลงข้อมูลทุกประเภทเป็น QR Code ระดับมืออาชีพ ปรับแต่งสีสัน ใส่โลโก้ และดาวน์โหลดได้ทันที</p>
+            <p class="subtitle">สร้าง QR Code สไตล์มินิมอล เรียบง่าย ครบทุกรูปแบบ ทั้งลิงก์ ไฟล์ PDF รูปภาพ และคลิปวิดีโอ</p>
         </header>
 
         <!-- Main Workspace -->
@@ -49,6 +55,18 @@
                         <button class="tab-btn active" data-tab="url">
                             <i data-lucide="link"></i>
                             <span>ลิงก์ / URL</span>
+                        </button>
+                        <button class="tab-btn" data-tab="pdf">
+                            <i data-lucide="file-text"></i>
+                            <span>ไฟล์ PDF</span>
+                        </button>
+                        <button class="tab-btn" data-tab="image">
+                            <i data-lucide="image"></i>
+                            <span>รูปภาพ</span>
+                        </button>
+                        <button class="tab-btn" data-tab="video">
+                            <i data-lucide="video"></i>
+                            <span>วิดีโอ / คลิป</span>
                         </button>
                         <button class="tab-btn" data-tab="text">
                             <i data-lucide="align-left"></i>
@@ -109,6 +127,331 @@
                                 <input type="url" id="url-input" placeholder="https://example.com" value="https://google.com">
                             </div>
                             <span class="help-text">เช่น ลิงก์ร้านค้าออนไลน์, ลิงก์ Portfolio, หรือเว็บไซต์ใด ๆ</span>
+                        </div>
+                    </div>
+
+                    <!-- PDF Tab -->
+                    <div class="tab-content" id="content-pdf">
+                        <div class="content-header-row">
+                            <div>
+                                <h2>สร้าง QR Code สำหรับเอกสาร PDF</h2>
+                                <p class="section-desc">แปลงไฟล์ PDF เป็น QR Code สำหรับเมนูอาหาร โบรชัวร์ แคตตาล็อก หรือเอกสาร</p>
+                            </div>
+                            <div class="submode-pills" id="pdf-mode-pills">
+                                <button type="button" class="submode-pill active" data-submode="upload" data-panel="pdf-upload-panel">
+                                    <i data-lucide="upload-cloud"></i>
+                                    <span>อัปโหลดไฟล์ PDF</span>
+                                </button>
+                                <button type="button" class="submode-pill" data-submode="link" data-panel="pdf-link-panel">
+                                    <i data-lucide="link"></i>
+                                    <span>ลิงก์ PDF / ไดรฟ์</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PDF Upload Panel -->
+                        <div class="submode-panel active" id="pdf-upload-panel">
+                            <div class="file-dropzone" id="pdf-dropzone">
+                                <input type="file" id="pdf-file-input" accept="application/pdf" class="file-input-hidden">
+                                <div class="dropzone-inner" id="pdf-dropzone-inner">
+                                    <div class="dropzone-icon pdf-badge">
+                                        <i data-lucide="file-text"></i>
+                                    </div>
+                                    <div class="dropzone-info">
+                                        <p class="dropzone-main-text">ลากไฟล์ PDF มาวางที่นี่ หรือ <span class="highlight-link">คลิกเพื่อเลือกไฟล์</span></p>
+                                        <p class="dropzone-sub-text">รองรับไฟล์เอกสาร .pdf ขนาดไม่เกิน 100MB (อัปโหลดขึ้น Cloud ฟรีอัตโนมัติ)</p>
+                                    </div>
+                                </div>
+
+                                <!-- PDF Selected File Card -->
+                                <div class="file-card hidden" id="pdf-file-card">
+                                    <div class="file-card-info">
+                                        <div class="file-card-icon pdf-badge">
+                                            <i data-lucide="file-check-2"></i>
+                                        </div>
+                                        <div class="file-card-text">
+                                            <p class="file-card-name" id="pdf-file-name">document.pdf</p>
+                                            <p class="file-card-meta" id="pdf-file-size">1.2 MB</p>
+                                        </div>
+                                    </div>
+                                    <div class="file-card-actions">
+                                        <button type="button" class="btn-card-action btn-danger-action" id="btn-remove-pdf-file" title="ลบไฟล์">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PDF Upload Progress -->
+                            <div class="upload-progress-wrapper hidden" id="pdf-progress-wrapper">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="pdf-progress-bar" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-info-row">
+                                    <span id="pdf-progress-status"><i data-lucide="loader-2" class="animate-spin"></i> กำลังอัปโหลดขึ้น Cloud จัดเก็บไฟล์...</span>
+                                    <span id="pdf-progress-percent">0%</span>
+                                </div>
+                            </div>
+
+                            <!-- PDF Generated URL -->
+                            <div class="input-group">
+                                <label for="pdf-direct-url">URL ไฟล์ PDF สำหรับสร้าง QR Code</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="globe" class="field-icon"></i>
+                                    <input type="url" id="pdf-direct-url" placeholder="จะปรากฏลิงก์อัตโนมัติเมื่อเลือกหรืออัปโหลดไฟล์">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-pdf" title="ทดสอบเปิดไฟล์ PDF" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                                <span class="help-text">เมื่อมีลิงก์ ระบบจะสร้าง QR Code ให้อัตโนมัติทันที</span>
+                            </div>
+                        </div>
+
+                        <!-- PDF Link Panel -->
+                        <div class="submode-panel hidden" id="pdf-link-panel">
+                            <div class="quick-presets">
+                                <span class="presets-label">ตัวช่วยลิงก์:</span>
+                                <button type="button" class="preset-chip" id="preset-pdf-gdrive">
+                                    <i data-lucide="hard-drive"></i> Google Drive
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-pdf-canva">
+                                    <i data-lucide="layout"></i> Canva
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-pdf-onedrive">
+                                    <i data-lucide="cloud"></i> OneDrive
+                                </button>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="pdf-link-input">ป้อนลิงก์ไฟล์ PDF</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="link-2" class="field-icon"></i>
+                                    <input type="url" id="pdf-link-input" placeholder="https://drive.google.com/file/d/.../view หรือ https://example.com/menu.pdf">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-pdf-link" title="ทดสอบเปิดลิงก์" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                                <div class="tip-banner">
+                                    <i data-lucide="sparkles"></i>
+                                    <span><strong>แปลงลิงก์อัตโนมัติ:</strong> หากวางลิงก์ Google Drive ระบบจะแปลงเป็นโหมดพรีวิวเอกสารบนมือถือโดยไม่ต้องล็อกอิน Google!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Tab -->
+                    <div class="tab-content" id="content-image">
+                        <div class="content-header-row">
+                            <div>
+                                <h2>สร้าง QR Code สำหรับรูปภาพ</h2>
+                                <p class="section-desc">แปลงรูปภาพ โปสเตอร์ แบนเนอร์ หรือรูปโปรโมชัน ให้สแกนดูรูปบนมือถือได้ทันที</p>
+                            </div>
+                            <div class="submode-pills" id="image-mode-pills">
+                                <button type="button" class="submode-pill active" data-submode="upload" data-panel="img-upload-panel">
+                                    <i data-lucide="upload-cloud"></i>
+                                    <span>อัปโหลดรูปภาพ</span>
+                                </button>
+                                <button type="button" class="submode-pill" data-submode="link" data-panel="img-link-panel">
+                                    <i data-lucide="link"></i>
+                                    <span>ลิงก์รูปภาพ</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Image Upload Panel -->
+                        <div class="submode-panel active" id="img-upload-panel">
+                            <div class="file-dropzone" id="img-dropzone">
+                                <input type="file" id="img-file-input" accept="image/png,image/jpeg,image/webp,image/gif" class="file-input-hidden">
+                                <div class="dropzone-inner" id="img-dropzone-inner">
+                                    <div class="dropzone-icon img-badge">
+                                        <i data-lucide="image"></i>
+                                    </div>
+                                    <div class="dropzone-info">
+                                        <p class="dropzone-main-text">ลากรูปภาพมาวางที่นี่ หรือ <span class="highlight-link">คลิกเพื่อเลือกรูปภาพ</span></p>
+                                        <p class="dropzone-sub-text">รองรับ PNG, JPG, JPEG, WebP, GIF สูงสุด 50MB (อัปโหลดขึ้น Cloud ฟรี)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Image Selected Preview Card -->
+                                <div class="image-preview-card hidden" id="img-preview-card">
+                                    <div class="image-preview-thumb">
+                                        <img id="img-file-thumb" src="#" alt="Preview">
+                                    </div>
+                                    <div class="image-preview-meta">
+                                        <p class="file-card-name" id="img-file-name">photo.jpg</p>
+                                        <p class="file-card-meta" id="img-file-size">850 KB</p>
+                                        <button type="button" class="btn-text-danger-inline" id="btn-remove-img-file">
+                                            <i data-lucide="trash-2"></i> ลบรูปภาพนี้
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Image Upload Progress -->
+                            <div class="upload-progress-wrapper hidden" id="img-progress-wrapper">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="img-progress-bar" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-info-row">
+                                    <span id="img-progress-status"><i data-lucide="loader-2" class="animate-spin"></i> กำลังอัปโหลดรูปภาพขึ้น Cloud...</span>
+                                    <span id="img-progress-percent">0%</span>
+                                </div>
+                            </div>
+
+                            <!-- Image Generated URL -->
+                            <div class="input-group">
+                                <label for="img-direct-url">URL รูปภาพสำหรับสร้าง QR Code</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="globe" class="field-icon"></i>
+                                    <input type="url" id="img-direct-url" placeholder="จะปรากฏลิงก์อัตโนมัติเมื่อเลือกหรืออัปโหลดรูปภาพ">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-img" title="ทดสอบเปิดดูรูปภาพ" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Link Panel -->
+                        <div class="submode-panel hidden" id="img-link-panel">
+                            <div class="quick-presets">
+                                <span class="presets-label">บริการรูปภาพ:</span>
+                                <button type="button" class="preset-chip" id="preset-img-gdrive">
+                                    <i data-lucide="hard-drive"></i> Google Drive
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-img-imgur">
+                                    <i data-lucide="image"></i> Imgur
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-img-icloud">
+                                    <i data-lucide="cloud"></i> iCloud
+                                </button>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="img-link-input">ป้อน URL รูปภาพโดยตรง</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="image" class="field-icon"></i>
+                                    <input type="url" id="img-link-input" placeholder="https://example.com/banner.jpg หรือ ลิงก์แชร์ Google Drive">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-img-link" title="ทดสอบเปิดรูปภาพ" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                                <div class="tip-banner">
+                                    <i data-lucide="sparkles"></i>
+                                    <span><strong>ระบบจัดการลิงก์:</strong> หากเป็นลิงก์ Google Drive ระบบจะแปลงเป็น Direct Image Viewer ให้อัตโนมัติ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Tab -->
+                    <div class="tab-content" id="content-video">
+                        <div class="content-header-row">
+                            <div>
+                                <h2>สร้าง QR Code สำหรับวิดีโอ / คลิป</h2>
+                                <p class="section-desc">สแกนแล้วเปิดดูคลิปวิดีโอได้ทันที รองรับคลิปสั้น YouTube Shorts, TikTok, Reels และไฟล์วิดีโอ</p>
+                            </div>
+                            <div class="submode-pills" id="video-mode-pills">
+                                <button type="button" class="submode-pill active" data-submode="link" data-panel="video-link-panel">
+                                    <i data-lucide="play-circle"></i>
+                                    <span>ลิงก์คลิป / โซเชียล</span>
+                                </button>
+                                <button type="button" class="submode-pill" data-submode="upload" data-panel="video-upload-panel">
+                                    <i data-lucide="upload-cloud"></i>
+                                    <span>อัปโหลดไฟล์วิดีโอ</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Video Link Panel -->
+                        <div class="submode-panel active" id="video-link-panel">
+                            <div class="quick-presets">
+                                <span class="presets-label">แพลตฟอร์มยอดนิยม:</span>
+                                <button type="button" class="preset-chip" id="preset-video-youtube">
+                                    <i data-lucide="play"></i> YouTube
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-video-tiktok">
+                                    <i data-lucide="film"></i> TikTok
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-video-reels">
+                                    <i data-lucide="instagram"></i> Reels
+                                </button>
+                                <button type="button" class="preset-chip" id="preset-video-gdrive">
+                                    <i data-lucide="hard-drive"></i> Google Drive
+                                </button>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="video-link-input">ป้อนลิงก์วิดีโอ (YouTube, TikTok, Reels, หรือ MP4 URL)</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="video" class="field-icon"></i>
+                                    <input type="url" id="video-link-input" placeholder="https://youtube.com/shorts/... หรือ https://tiktok.com/@.../video/...">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-video-link" title="ทดสอบเปิดคลิป" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                                <span class="help-text">รองรับลิงก์คลิปสั้น YouTube Shorts, TikTok, Instagram Reels, Facebook Video, Google Drive</span>
+                            </div>
+
+                            <!-- Live Video Embed / Preview -->
+                            <div class="video-preview-wrapper hidden" id="video-embed-preview">
+                                <div class="video-preview-badge">
+                                    <i data-lucide="play-circle"></i> ตัวอย่างวิดีโอ
+                                </div>
+                                <div id="video-embed-container" class="video-embed-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Video Upload Panel -->
+                        <div class="submode-panel hidden" id="video-upload-panel">
+                            <div class="file-dropzone" id="video-dropzone">
+                                <input type="file" id="video-file-input" accept="video/mp4,video/webm,video/quicktime,video/x-m4v" class="file-input-hidden">
+                                <div class="dropzone-inner" id="video-dropzone-inner">
+                                    <div class="dropzone-icon video-badge">
+                                        <i data-lucide="video"></i>
+                                    </div>
+                                    <div class="dropzone-info">
+                                        <p class="dropzone-main-text">ลากไฟล์คลิปวิดีโอมาวางที่นี่ หรือ <span class="highlight-link">คลิกเพื่อเลือกไฟล์</span></p>
+                                        <p class="dropzone-sub-text">รองรับ MP4, WebM, MOV สูงสุด 100MB (อัปโหลดขึ้น Cloud ฟรีอัตโนมัติ)</p>
+                                    </div>
+                                </div>
+
+                                <!-- Local Video Player Card -->
+                                <div class="video-file-card hidden" id="video-file-card">
+                                    <div class="video-player-box">
+                                        <video id="video-local-player" controls preload="metadata"></video>
+                                    </div>
+                                    <div class="video-card-meta">
+                                        <p class="file-card-name" id="video-file-name">video.mp4</p>
+                                        <p class="file-card-meta" id="video-file-size">14.2 MB</p>
+                                        <button type="button" class="btn-text-danger-inline" id="btn-remove-video-file">
+                                            <i data-lucide="trash-2"></i> ลบคลิปวิดีโอนี้
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Video Upload Progress -->
+                            <div class="upload-progress-wrapper hidden" id="video-progress-wrapper">
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="video-progress-bar" style="width: 0%;"></div>
+                                </div>
+                                <div class="progress-info-row">
+                                    <span id="video-progress-status"><i data-lucide="loader-2" class="animate-spin"></i> กำลังอัปโหลดวิดีโอขึ้น Cloud...</span>
+                                    <span id="video-progress-percent">0%</span>
+                                </div>
+                            </div>
+
+                            <!-- Video Generated URL -->
+                            <div class="input-group">
+                                <label for="video-direct-url">URL วิดีโอสำหรับสร้าง QR Code</label>
+                                <div class="input-wrapper">
+                                    <i data-lucide="globe" class="field-icon"></i>
+                                    <input type="url" id="video-direct-url" placeholder="จะปรากฏลิงก์อัตโนมัติเมื่อเลือกหรืออัปโหลดวิดีโอ">
+                                    <button type="button" class="btn-inline-icon" id="btn-test-video" title="ทดสอบเปิดวิดีโอ" disabled>
+                                        <i data-lucide="external-link"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -680,11 +1023,67 @@
             <span id="toast-message">คัดลอกสำเร็จ!</span>
         </div>
 
+        <!-- Scanner Modal -->
+        <div id="scanner-modal" class="modal-overlay hidden">
+            <div class="modal-card glass-card">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i data-lucide="scan"></i>
+                        <h3>สแกน / ถอดรหัส QR Code จากภาพ</h3>
+                    </div>
+                    <button type="button" id="btn-close-scanner" class="modal-close-btn" title="ปิดหน้าต่าง">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-desc">เลือกภาพ QR Code (ภาพถ่าย, สกรีนช็อต, หรือภาพเอกสาร) เพื่อถอดรหัสอ่านข้อมูลหรือเปิดลิงก์ทันที</p>
+                    
+                    <div class="scanner-dropzone" id="scanner-dropzone">
+                        <input type="file" id="scanner-file-input" accept="image/*" class="file-input-hidden">
+                        <i data-lucide="image-search" class="scanner-zone-icon"></i>
+                        <p class="scanner-zone-text">ลากรูปภาพ QR Code มาวางที่นี่ หรือ <span class="highlight-link">คลิกเพื่อเลือกภาพ</span></p>
+                        <p class="scanner-zone-sub">รองรับ JPG, PNG, WebP, GIF</p>
+                    </div>
+
+                    <div id="scanner-preview-box" class="scanner-preview-box hidden">
+                        <img id="scanner-preview-img" src="#" alt="QR Code Image">
+                        <p id="scanner-status-text"><i data-lucide="loader-2" class="animate-spin"></i> กำลังถอดรหัส...</p>
+                    </div>
+
+                    <div id="scanner-result-box" class="scanner-result-box hidden">
+                        <div class="scanner-result-header">
+                            <span class="badge-success"><i data-lucide="check-circle-2"></i> ผลการถอดรหัส QR Code</span>
+                        </div>
+                        <div class="scanner-result-content">
+                            <textarea id="scanner-result-text" readonly rows="3"></textarea>
+                        </div>
+                        <div class="scanner-result-actions">
+                            <button type="button" id="btn-copy-scan" class="btn-secondary">
+                                <i data-lucide="copy"></i>
+                                <span>คัดลอก</span>
+                            </button>
+                            <a href="#" id="btn-open-scan-link" target="_blank" class="btn-primary hidden">
+                                <i data-lucide="external-link"></i>
+                                <span>เปิดลิงก์</span>
+                            </a>
+                            <button type="button" id="btn-use-scan-text" class="btn-secondary">
+                                <i data-lucide="arrow-right-circle"></i>
+                                <span>นำไปทำ QR Code</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Info / Footer Section -->
         <footer class="app-footer">
             <p>&copy; 2026 QRCraft — Created by <strong>Zedrayami</strong></p>
         </footer>
     </div>
+
+    <!-- jsQR Library for browser decoding fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <!-- Application Logic -->
     <script src="app.js"></script>
